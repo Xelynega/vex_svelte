@@ -172,6 +172,7 @@ client.on("message", (topic, message) => {
     default:
       console.log(`invalid display class ${message_str}`)
     }
+    break;
   default:
     console.log(`Unhandled topic ${topic_str}`)
   }
@@ -193,7 +194,7 @@ onMount(() => {
 
 </script>
 
-<div class={display_class} style="border: 1px solid black;">
+<div class={display_class}>
   {#if (display_state == "timer")}
     <div class="score-grid">
       <p id="event-name">{event_name}</p>
@@ -223,13 +224,12 @@ onMount(() => {
 
 <style>
 :global(html){
-  background-color: transparent;
+  background-color: pink;
 }
 
 :global(body){
   margin: 0;
   padding: 0;
-  background-color: transparent;
 }
 
 p {
@@ -313,14 +313,14 @@ div.score-grid {
 
 .side-display {
   container-type: size;
-  background-color: transparent;
+  background-color: white;
   width: 896px;
   height: 128px;
 }
 
 .center-display {
   container-type: size;
-  background-color: transparent;
+  background-color: white;
   width: 1176px;
   height: 168px;
 }
