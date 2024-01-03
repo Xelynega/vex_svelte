@@ -195,29 +195,29 @@ onMount(() => {
 
 <div class={display_class} style="border: 1px solid black;">
   {#if (display_state == "timer")}
-  <div class="score-grid">
-    <p id="event-name">{event_name}</p>
-    <p id="timer">{timer}</p>
-    <p id="match">{match_name}</p>
+    <div class="score-grid">
+      <p id="event-name">{event_name}</p>
+      <p id="timer">{timer}</p>
+      <p id="match">{match_name}</p>
 
-    <p id="score-red">{score_red}</p>
-    <p id="score-blue">{score_blue}</p>
+      <p id="score-red">{score_red}</p>
+      <p id="score-blue">{score_blue}</p>
 
-    <div class="teams" id="teams-red">
-      {#each teams_red as team}
-        <p>{team}</p>
-      {/each}
+      <div class="teams" id="teams-red">
+        {#each teams_red as team}
+          <p>{team}</p>
+        {/each}
+      </div>
+      <div class="teams" id="teams-blue">
+        {#each teams_blue as team}
+          <p>{team}</p>
+        {/each}
+      </div>
     </div>
-    <div class="teams" id="teams-blue">
-      {#each teams_blue as team}
-        <p>{team}</p>
-      {/each}
-    </div>
-  </div>
   {:else if (display_state == "init")}
-  <div class="banner"><p>{event_name}</p></div>
+    <div class="banner"><p>{event_name}</p></div>
   {:else}
-  <div class="banner"><p>Invalid State {display_state}</p></div>
+    <div class="banner"><p>Invalid State {display_state}</p></div>
   {/if}
 </div>
 
