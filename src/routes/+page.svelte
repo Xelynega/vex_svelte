@@ -240,7 +240,7 @@ div.score-grid {
   justify-items: center;
   align-items: center;
 
-  grid-template: 30% 40% 30% / 20% 40% 20%;
+  grid-template: 30% 40% 30% / 20% 60% 20%;
 
   grid-template-areas:
   "red-top top blue-top"
