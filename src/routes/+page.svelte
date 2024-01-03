@@ -15,8 +15,10 @@ let score_red = 0;
 let score_blue = 0;
 let teams_red = ["6659A", "6659B"];
 let teams_blue = ["210Z", "210Y"];
-let timer_start = undefined;
+
+/** @type {undefined | Date} */
 let timer_end = undefined;
+/** @type {undefined | ReturnType<typeof setTimeout>} */
 let timer_next_tick = undefined;
 let timer = "Scheduled";
 
@@ -58,8 +60,13 @@ function stop_timer() {
 }
 
 function tick_timer() {
+  if(timer_end === undefined) {
+    stop_timer();
+    return
+  }
+
   const now = new Date()
-  const time_diff = timer_end - now;
+  const time_diff = timer_end.getTime() - now.getTime();
   if (time_diff <= 0) {
     timer = "0:00";
     stop_timer();
@@ -90,7 +97,6 @@ client.on("message", (topic, message) => {
     const state_obj = JSON.parse(message_str);
     // Convert seconds to ms *1000 convert ns to ms /1000000
     const start_ms = (state_obj.start_s * 1000) + (state_obj.start_ns / 1000000);
-    const start_time = new Date(start_ms);
     switch(state_obj.state) {
     case "SCHEDULED":
       timer = "Scheduled";
@@ -99,7 +105,6 @@ client.on("message", (topic, message) => {
       timer = "Timeout";
       break;
     case "DRIVER":
-      timer_start = start_time;
       timer_end = new Date(start_ms + 105000);
       tick_timer();
       timer_next_tick = setInterval(tick_timer, 50);
@@ -108,7 +113,6 @@ client.on("message", (topic, message) => {
       timer = "Driver Done";
       break;
     case "AUTONOMOUS":
-      timer_start = start_time;
       timer_end = new Date(start_ms + 15000);
       tick_timer();
       timer_next_tick = setInterval(tick_timer, 50);
