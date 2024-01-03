@@ -139,6 +139,9 @@ import { onMount } from 'svelte';
 onMount(() => {
   const search_params = new URLSearchParams(window.location.search);
   arena_id = search_params.get("arena");
+  if (arena_id === null) {
+    arena_id = "default";
+  }
   arena_topic = `arena/${arena_id}`;
   arena_state_topic = `arena/${arena_id}/state`;
   arena_score_topic = `arena/${arena_id}/score`;
