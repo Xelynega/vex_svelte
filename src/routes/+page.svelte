@@ -10,11 +10,13 @@ let arena_state_topic;
 let arena_score_topic;
 
 let event_name = "Mecha Mayhem 2024";
-let match_name = "Qualification 1";
+let match_name = "No Match";
 let score_red = 0;
 let score_blue = 0;
-let teams_red = ["6659A", "6659B"];
-let teams_blue = ["210Z", "210Y"];
+/** @type {string[]} */
+let teams_red = [];
+/** @type {string[]} */
+let teams_blue = [];
 
 /** @type {undefined | Date} */
 let timer_end = undefined;
