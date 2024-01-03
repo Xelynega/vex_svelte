@@ -3,11 +3,15 @@ import mqtt from "mqtt";
 
 let arena_id;
 /** @type {string} */
-let arena_topic;
+let arena_metadata_topic;
 /** @type {string} */
 let arena_state_topic;
 /** @type {string} */
 let arena_score_topic;
+/** @type {string} */
+let display_state_topic;
+/** @type {string} */
+let display_class_topic;
 
 let event_name = "Mecha Mayhem 2024";
 let match_name = "No Match";
@@ -24,15 +28,37 @@ let timer_end = undefined;
 let timer_next_tick = undefined;
 let timer = "Scheduled";
 
+/** @type {string} */
+let display_state = "init";
+
+/** @type {string} */
+let display_class = "side-display";
+
 const client = mqtt.connect("ws://127.0.0.1:8883");
 
 client.on("connect", () => {
   console.log("connected to mqtt");
-  client.subscribe(arena_topic, (err) => {
+  client.subscribe(display_state_topic, (err) => {
     if (err) {
       console.log(err);
     } else {
-      console.log(`subscribed to ${arena_topic}`);
+      console.log(`subscribed to ${display_state_topic}`);
+    }
+  });
+
+  client.subscribe(display_class_topic, (err) => {
+    if (err) {
+      console.log(err);
+    } else {
+      console.log(`subscribed to ${display_class_topic}`);
+    }
+  });
+
+  client.subscribe(arena_metadata_topic, (err) => {
+    if (err) {
+      console.log(err);
+    } else {
+      console.log(`subscribed to ${arena_metadata_topic}`);
     }
   });
 
@@ -87,7 +113,7 @@ client.on("message", (topic, message) => {
   console.log(`${topic_str} - ${message_str}`);
 
   switch(topic_str){
-  case arena_topic:
+  case arena_metadata_topic:
     const arena_obj = JSON.parse(message_str);
     teams_red = [arena_obj.red1, arena_obj.red2];
     teams_blue = [arena_obj.blue1, arena_obj.blue2];
@@ -132,6 +158,20 @@ client.on("message", (topic, message) => {
     score_red = score_obj.red.total;
     score_blue = score_obj.blue.total;
     break;
+  case display_state_topic:
+    display_state = message_str;
+    break;
+  case display_class_topic:
+    switch(message_str){
+    case "side":
+      display_class = "side-display";
+      break;
+    case "center":
+      display_class = "center-display";
+      break;
+    default:
+      console.log(`invalid display class ${message_str}`)
+    }
   default:
     console.log(`Unhandled topic ${topic_str}`)
   }
@@ -144,14 +184,17 @@ onMount(() => {
   if (arena_id === null) {
     arena_id = "default";
   }
-  arena_topic = `arena/${arena_id}`;
-  arena_state_topic = `arena/${arena_id}/state`;
-  arena_score_topic = `arena/${arena_id}/score`;
+  arena_metadata_topic = `arena/${arena_id}`;
+  arena_state_topic    = `arena/${arena_id}/state`;
+  arena_score_topic    = `arena/${arena_id}/score`;
+  display_state_topic  = `display/${arena_id}/state`;
+  display_class_topic  = `display/${arena_id}/class`;
 });
 
 </script>
 
-<div class="center-display container" style="border: 1px solid black;">
+<div class={display_class} style="border: 1px solid black;">
+  {#if (display_state == "timer")}
   <div class="score-grid">
     <p id="event-name">{event_name}</p>
     <p id="timer">{timer}</p>
@@ -171,6 +214,11 @@ onMount(() => {
       {/each}
     </div>
   </div>
+  {:else if (display_state == "init")}
+  <div class="banner"><p>{event_name}</p></div>
+  {:else}
+  <div class="banner"><p>Invalid State {display_state}</p></div>
+  {/if}
 </div>
 
 <style>
@@ -187,6 +235,16 @@ onMount(() => {
 p {
   margin: 0px;
   color: gray;
+}
+
+.banner {
+  display: flex;
+  font-size: 8cqw;
+  align-items: center;
+  justify-content: space-evenly;
+
+  height: 100%;
+  width: 100%;
 }
 
 .teams {
@@ -237,10 +295,6 @@ p {
   font-size: 5cqw;
 }
 
-.container {
-  container-type: size;
-}
-
 div.score-grid {
   width: 100%;
   height: 100%;
@@ -258,12 +312,14 @@ div.score-grid {
 }
 
 .side-display {
+  container-type: size;
   background-color: transparent;
   width: 896px;
   height: 128px;
 }
 
 .center-display {
+  container-type: size;
   background-color: transparent;
   width: 1176px;
   height: 168px;
