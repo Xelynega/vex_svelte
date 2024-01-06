@@ -13,6 +13,20 @@ let display_state_topic;
 /** @type {string} */
 let display_class_topic;
 
+/** @type {number} */
+let score_midpoint_current = 50;
+/** @type {number} */
+let score_midpoint_setpoint = 50;
+
+let coeff_p = 0.1;
+
+function midpoint_timer(){
+  // start with simple P control, maybe add ID later
+  let delta = score_midpoint_setpoint - score_midpoint_current;
+  score_midpoint_current = score_midpoint_current + (delta * coeff_p);
+}
+let midpoint_timer_interval = setInterval(midpoint_timer, 10);
+
 let event_name = "Mecha Mayhem 2024";
 let match_name = "No Match";
 let score_red = 0;
@@ -24,7 +38,7 @@ let teams_blue = [];
 
 /** @type {undefined | Date} */
 let timer_end = undefined;
-/** @type {undefined | ReturnType<typeof setTimeout>} */
+/** @type {undefined | ReturnType<typeof setInterval>} */
 let timer_next_tick = undefined;
 let timer = "Scheduled";
 
@@ -91,6 +105,7 @@ function tick_timer() {
   if(timer_end === undefined) {
     stop_timer();
     return
+
   }
 
   const now = new Date()
@@ -157,6 +172,7 @@ client.on("message", (topic, message) => {
     const score_obj = JSON.parse(message_str);
     score_red = score_obj.red.total;
     score_blue = score_obj.blue.total;
+    score_midpoint_setpoint = ((score_red + 1) / (score_red + score_blue + 2)) * 100;
     break;
   case display_state_topic:
     display_state = message_str;
@@ -215,7 +231,15 @@ onMount(() => {
         {/each}
       </div>
     </div>
+    <div id="score-background">
+      <div id="score-background-red" style={`width: ${score_midpoint_current}%`}>
+      </div>
+      <div id="score-background-blue" style={`width: ${100 - score_midpoint_current}%`}>
+      </div>
+    </div>
   {:else if (display_state == "init")}
+    <div class="banner"></div>
+  {:else if (display_state == "event-name")}
     <div class="banner"><p>{event_name}</p></div>
   {:else}
     <div class="banner"><p>Invalid State {display_state}</p></div>
@@ -223,6 +247,11 @@ onMount(() => {
 </div>
 
 <style>
+@font-face {
+  font-family: "apple2";
+  src: url('apple2.woff2') format('woff2');
+}
+
 :global(html){
   background-color: pink;
 }
@@ -233,13 +262,34 @@ onMount(() => {
 }
 
 p {
+  font-family: "apple2";
   margin: 0px;
-  color: gray;
+  color: white;
+  -webkit-text-stroke: 0.02em black;
+}
+
+#score-background {
+  z-index: 0;
+  position: relative;
+  top: -100%;
+  display: flex;
+  flex-direction: row;
+  height: 100%;
+}
+
+#score-background-blue {
+  height: 100%;
+  background-color: blue;
+}
+
+#score-background-red {
+  height: 100%;
+  background-color: red;
 }
 
 .banner {
   display: flex;
-  font-size: 8cqw;
+  font-size: 5cqw;
   align-items: center;
   justify-content: space-evenly;
 
@@ -271,6 +321,7 @@ p {
 
   font-size: 5cqw;
   justify-self: left;
+  padding-left: 2cqw;
 }
 
 #score-blue {
@@ -278,6 +329,7 @@ p {
 
   font-size: 5cqw;
   justify-self: right;
+  padding-right: 2cqw;
 }
 
 #match {
@@ -296,6 +348,9 @@ p {
 }
 
 div.score-grid {
+  position: relative;
+  background-color: transparent;
+  z-index: 1;
   width: 100%;
   height: 100%;
   display: grid;
