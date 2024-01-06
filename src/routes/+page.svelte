@@ -211,7 +211,9 @@ onMount(() => {
 </script>
 
 <div class={display_class}>
-  {#if (display_state == "timer")}
+  {#if (display_state == "init")}
+    <div class="banner"></div>
+  {:else if (display_state == "timer")}
     <div class="score-grid">
       <p id="event-name">{event_name}</p>
       <p id="timer">{timer}</p>
@@ -237,10 +239,14 @@ onMount(() => {
       <div id="score-background-blue" style={`width: ${100 - score_midpoint_current}%`}>
       </div>
     </div>
-  {:else if (display_state == "init")}
-    <div class="banner"></div>
+  {:else if (display_state == "pre-game")}
+    <div id="pre-game"></div>
   {:else if (display_state == "event-name")}
     <div class="banner"><p>{event_name}</p></div>
+  {:else if (display_state == "alliance-selection")}
+    <div class="banner"><p>210Y Selecting</p></div>
+  {:else if (display_state == "break")}
+    <div class="banner"><p>Practice @ 12:45</p></div>
   {:else}
     <div class="banner"><p>Invalid State {display_state}</p></div>
   {/if}
