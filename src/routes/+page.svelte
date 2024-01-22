@@ -131,7 +131,7 @@ client.on("message", (topic, message) => {
   case field_metadata_topic:
     const field_obj = JSON.parse(message_str);
     teams_red = [field_obj.red_teams[0], field_obj.red_teams[1]];
-    teams_blue = [field_obj.blue_teams[1], field_obj.blue_teams[1]];
+    teams_blue = [field_obj.blue_teams[0], field_obj.blue_teams[1]];
     let num = field_obj.tuple.match_num;
     let round = field_obj.tuple.round;
     match_name = `${round} ${num}`;
