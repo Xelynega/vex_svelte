@@ -1,13 +1,13 @@
 <script>
 import mqtt from "mqtt";
 
-let arena_id;
+let field_id;
 /** @type {string} */
-let arena_metadata_topic;
+let field_metadata_topic;
 /** @type {string} */
-let arena_state_topic;
+let field_state_topic;
 /** @type {string} */
-let arena_score_topic;
+let field_score_topic;
 /** @type {string} */
 let display_state_topic;
 /** @type {string} */
@@ -68,27 +68,27 @@ client.on("connect", () => {
     }
   });
 
-  client.subscribe(arena_metadata_topic, (err) => {
+  client.subscribe(field_metadata_topic, (err) => {
     if (err) {
       console.log(err);
     } else {
-      console.log(`subscribed to ${arena_metadata_topic}`);
+      console.log(`subscribed to ${field_metadata_topic}`);
     }
   });
 
-  client.subscribe(arena_state_topic, (err) => {
+  client.subscribe(field_state_topic, (err) => {
     if (err) {
       console.log(err);
     } else {
-      console.log(`subscribed to ${arena_state_topic}`);
+      console.log(`subscribed to ${field_state_topic}`);
     }
   });
 
-  client.subscribe(arena_score_topic, (err) => {
+  client.subscribe(field_score_topic, (err) => {
     if (err) {
       console.log(err);
     } else {
-      console.log(`subscribed to ${arena_score_topic}`);
+      console.log(`subscribed to ${field_score_topic}`);
     }
   });
 });
@@ -128,50 +128,58 @@ client.on("message", (topic, message) => {
   console.log(`${topic_str} - ${message_str}`);
 
   switch(topic_str){
-  case arena_metadata_topic:
-    const arena_obj = JSON.parse(message_str);
-    teams_red = [arena_obj.red1, arena_obj.red2];
-    teams_blue = [arena_obj.blue1, arena_obj.blue2];
-    // TODO: fill match name based off metadata
+  case field_metadata_topic:
+    const field_obj = JSON.parse(message_str);
+    teams_red = [field_obj.red_teams[0], field_obj.red_teams[1]];
+    teams_blue = [field_obj.blue_teams[1], field_obj.blue_teams[1]];
+    let num = field_obj.tuple.match_num;
+    let round = field_obj.tuple.round;
+    match_name = `${round} ${num}`;
     break;
-  case arena_state_topic:
+  case field_state_topic:
     stop_timer();
 
     const state_obj = JSON.parse(message_str);
-    // Convert seconds to ms *1000 convert ns to ms /1000000
-    const start_ms = (state_obj.start_s * 1000) + (state_obj.start_ns / 1000000);
+    const start_ms = state_obj.start * 1000;
+    console.log(`Start_ms: ${start_ms}`);
     switch(state_obj.state) {
-    case "SCHEDULED":
+    case "Scheduled":
       timer = "Scheduled";
       break;
-    case "TIMEOUT":
+    case "Timeout":
       timer = "Timeout";
       break;
-    case "DRIVER":
+    case "Driver":
       timer_end = new Date(start_ms + 105000);
       tick_timer();
       timer_next_tick = setInterval(tick_timer, 50);
       break;
-    case "DRIVER_DONE":
-      timer = "Driver Done";
+    case "DriverDone":
+      timer = "00:00";
       break;
-    case "AUTONOMOUS":
+    case "Autonomous":
       timer_end = new Date(start_ms + 15000);
       tick_timer();
       timer_next_tick = setInterval(tick_timer, 50);
       break;
-    case "AUTONOMOUS_DONE":
-      timer = "Auton Done";
+    case "AutonomousDone":
+      timer = "00:00";
       break;
-    case "ABANDONED":
+    case "Abandoned":
       timer = "Abandoned";
+      break;
+    case "Stopped":
+      timer = "Stopped";
+      break;
+    case "Scored":
+      timer = "Scoring";
       break;
     }
     break;
-  case arena_score_topic:
+  case field_score_topic:
     const score_obj = JSON.parse(message_str);
-    score_red = score_obj.red.total;
-    score_blue = score_obj.blue.total;
+    score_red = score_obj.red_total;
+    score_blue = score_obj.blue_total;
     score_midpoint_setpoint = ((score_red + 1) / (score_red + score_blue + 2)) * 100;
     break;
   case display_state_topic:
@@ -197,15 +205,15 @@ client.on("message", (topic, message) => {
 import { onMount } from 'svelte';
 onMount(() => {
   const search_params = new URLSearchParams(window.location.search);
-  arena_id = search_params.get("arena");
-  if (arena_id === null) {
-    arena_id = "default";
+  field_id = search_params.get("field");
+  if (field_id === null) {
+    field_id = "default";
   }
-  arena_metadata_topic = `arena/${arena_id}`;
-  arena_state_topic    = `arena/${arena_id}/state`;
-  arena_score_topic    = `arena/${arena_id}/score`;
-  display_state_topic  = `display/${arena_id}/state`;
-  display_class_topic  = `display/${arena_id}/class`;
+  field_metadata_topic = `field/${field_id}`;
+  field_state_topic    = `field/${field_id}/state`;
+  field_score_topic    = `field/${field_id}/score`;
+  display_state_topic  = `display/${field_id}/state`;
+  display_class_topic  = `display/${field_id}/class`;
 });
 
 </script>
@@ -255,7 +263,7 @@ onMount(() => {
 <style>
 @font-face {
   font-family: "apple2";
-  src: url('apple2.woff2') format('woff2');
+  src: url('/static/fonts/apple2.woff2') format('woff2');
 }
 
 :global(html){
