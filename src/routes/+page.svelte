@@ -155,7 +155,7 @@ client.on("message", (topic, message) => {
       timer_next_tick = setInterval(tick_timer, 50);
       break;
     case "DriverDone":
-      timer = "00:00";
+      timer = "0:00";
       break;
     case "Autonomous":
       timer_end = new Date(start_ms + 15000);
@@ -163,7 +163,7 @@ client.on("message", (topic, message) => {
       timer_next_tick = setInterval(tick_timer, 50);
       break;
     case "AutonomousDone":
-      timer = "00:00";
+      timer = "0:00";
       break;
     case "Abandoned":
       timer = "Abandoned";
