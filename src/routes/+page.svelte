@@ -255,6 +255,8 @@ onMount(() => {
     <div class="banner"><p>210Y Selecting</p></div>
   {:else if (display_state == "break")}
     <div class="banner"><p>Practice @ 12:45</p></div>
+  {:else if (display_state == "red-wins")}
+    <img alt="red-wins" src="/gifs/red_win.gif" width="100%" height="100%">
   {:else}
     <div class="banner"><p>Invalid State {display_state}</p></div>
   {/if}
