@@ -48,10 +48,20 @@ let display_state = "init";
 /** @type {string} */
 let display_class = "side-display";
 
-const client = mqtt.connect("ws://127.0.0.1:8883");
+const client = mqtt.connect("ws://metznet.ca:8883");
+
+let offset = 0;
 
 client.on("connect", () => {
   console.log("connected to mqtt");
+  client.subscribe("time", (err) => {
+    if (err) {
+      console.log(err);
+    } else {
+      console.log(`subscribed to ${display_state_topic}`);
+    }
+  });
+
   client.subscribe(display_state_topic, (err) => {
     if (err) {
       console.log(err);
@@ -109,7 +119,7 @@ function tick_timer() {
   }
 
   const now = new Date()
-  const time_diff = timer_end.getTime() - now.getTime();
+  const time_diff = timer_end.getTime() - now.getTime() + offset;
   if (time_diff <= 0) {
     timer = "0:00";
     stop_timer();
@@ -128,6 +138,12 @@ client.on("message", (topic, message) => {
   console.log(`${topic_str} - ${message_str}`);
 
   switch(topic_str){
+  case "time":
+    let local = Date.now();
+    let server = JSON.parse(message_str) * 1000;
+    offset = local - server;
+    console.log(`NEW offset: ${local} - ${server} = ${offset}`);
+    break;
   case field_metadata_topic:
     const field_obj = JSON.parse(message_str);
     teams_red = [field_obj.red_teams[0], field_obj.red_teams[1]];
@@ -281,7 +297,7 @@ p {
   font-family: "apple2";
   margin: 0px;
   color: white;
-  -webkit-text-stroke: 0.02em black;
+  -webkit-text-stroke: 1px black;
 }
 
 #score-background {
