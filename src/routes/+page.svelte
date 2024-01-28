@@ -298,25 +298,35 @@ onMount(() => {
   {:else if (display_state == "break")}
     <div class="banner"><p>Practice @ 12:45</p></div>
   {:else if (display_state == "red-wins")}
-    <img alt="red-wins" src="/gifs/red_win.gif" width="100%" height="100%">
+    <img class="gif-background" alt="wavy" src="/gifs/wavy_background.gif">
+    <img class="gif-foreground" alt="red-wins" src="/gifs/red_win.gif">
   {:else if (display_state == "blue-wins")}
-    <img alt="blue-wins" src="/gifs/blue_win.gif" width="100%" height="100%">
+    <img class="gif-background" alt="wavy" src="/gifs/wavy_background.gif">
+    <img class="gif-foreground" alt="blue-wins" src="/gifs/blue_win.gif">
   {:else if (display_state == "rockies")}
-    <img alt="rockies" src="/gifs/rockies.gif" width="100%" height="100%">
+    <img class="gif-background" alt="wavy" src="/gifs/wavy_background.gif">
+    <img class="gif-foreground" alt="rockies" src="/gifs/rockies.gif">
   {:else if (display_state == "prairies")}
-    <img alt="prairies" src="/gifs/prairies.gif" width="100%" height="100%">
+    <img class="gif-background" alt="wavy" src="/gifs/wavy_background.gif">
+    <img class="gif-foreground" alt="prairies" src="/gifs/prairies.gif">
   {:else if (display_state == "ab-education")}
-    <img alt="ab-education" src="/gifs/ab_education.gif" width="100%" height="100%">
+    <img class="gif-background" alt="wavy" src="/gifs/wavy_background.gif">
+    <img class="gif-foreground" alt="ab-education" src="/gifs/ab_education.gif">
   {:else if (display_state == "ab-innovate")}
-    <img alt="ab-innovate" src="/gifs/ab_innovate.gif" width="100%" height="100%">
+    <img class="gif-background" alt="wavy" src="/gifs/wavy_background.gif">
+    <img class="gif-foreground" alt="ab-innovate" src="/gifs/ab_innovate.gif">
   {:else if (display_state == "tcenergy")}
-    <img alt="tcenergy" src="/gifs/tcenergy.gif" width="100%" height="100%">
+    <img class="gif-background" alt="wavy" src="/gifs/wavy_background.gif">
+    <img class="gif-foreground" alt="tcenergy" src="/gifs/tcenergy.gif">
   {:else if (display_state == "tourismcalgary")}
-    <img alt="tourismcalgary" src="/gifs/tourismcalgary.gif" width="100%" height="100%">
+    <img class="gif-background" alt="wavy" src="/gifs/wavy_background.gif">
+    <img class="gif-foreground" alt="tourismcalgary" src="/gifs/tourismcalgary.gif">
   {:else if (display_state == "encore")}
-    <img alt="encore" src="/gifs/encore.gif" width="100%" height="100%">
+    <img class="gif-background" alt="wavy" src="/gifs/wavy_background.gif">
+    <img class="gif-foreground" alt="encore" src="/gifs/encore.gif">
   {:else if (display_state == "westmech")}
-    <img alt="westmech" src="/gifs/westmech.gif" width="100%" height="100%">
+    <img class="gif-background" alt="wavy" src="/gifs/wavy_background.gif">
+    <img class="gif-foreground" alt="westmech" src="/gifs/westmech.gif">
   {:else}
     <div class="banner"><p>Invalid State {display_state}</p></div>
   {/if}
@@ -352,6 +362,19 @@ p {
   width: 98%;
   background-color: black;
   background-image: url("/gifs/wavy_background.gif");
+}
+
+.gif-foreground {
+  z-index: 1;
+  position: relative;
+  top: -103.3%;
+  width: 100%;
+}
+
+.gif-background {
+  z-index: 0;
+  height: 100%;
+  width: 100%;
 }
 
 #score-background {

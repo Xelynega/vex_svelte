@@ -82,14 +82,14 @@ client.on("message", (topic, message) => {
   {#each Object.entries(displays) as [name, info]}
     <div>
       <p>{name}</p>
-      <select bind:value={info.class} on:change={() => client.publish(`field/${name}/class`, info.class)}>
+      <select bind:value={info.class} on:change={() => client.publish(`display/${name}/class`, info.class)}>
         {#each classes as c}
           <option value={c}>
             {c}
           </option>
         {/each}
       </select>
-      <select bind:value={info.state} on:change={() => client.publish(`field/${name}/state`, info.state)}>
+      <select bind:value={info.state} on:change={() => client.publish(`display/${name}/state`, info.state)}>
         {#each states as s}
           <option value={s}>
             {s}
