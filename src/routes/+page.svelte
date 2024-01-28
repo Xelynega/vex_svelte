@@ -20,15 +20,26 @@ let score_midpoint_setpoint = 50;
 
 let coeff_p = 0.1;
 
-function midpoint_timer(){
-  // start with simple P control, maybe add ID later
+let red_anim_x = 0;
+let blue_anim_x = 0;
+let offset = 0;
+
+function animation_timer(){
+  // Midpoint calculation
   let delta = score_midpoint_setpoint - score_midpoint_current;
   score_midpoint_current = score_midpoint_current + (delta * coeff_p);
+
+  let current = Date.now() + offset;
+  let x = (current % 1500) / 1500;
+  let percent = -((x - 1)*(x - 1)) + 1;
+  red_anim_x = score_midpoint_current * percent;
+  blue_anim_x = (100 - score_midpoint_current) * percent;
 }
-let midpoint_timer_interval = setInterval(midpoint_timer, 10);
+let animation_timer_interval = setInterval(animation_timer, 10);
 
 let event_name = "Mecha Mayhem 2024";
 let match_name = "No Match";
+let match_name_show = "No Match";
 let score_red = 0;
 let score_blue = 0;
 /** @type {string[]} */
@@ -40,7 +51,7 @@ let teams_blue = [];
 let timer_end = undefined;
 /** @type {undefined | ReturnType<typeof setInterval>} */
 let timer_next_tick = undefined;
-let timer = "Scheduled";
+let timer = "Next Match";
 
 /** @type {string} */
 let display_state = "init";
@@ -50,7 +61,6 @@ let display_class = "side-display";
 
 const client = mqtt.connect("ws://metznet.ca:8883");
 
-let offset = 0;
 
 client.on("connect", () => {
   console.log("connected to mqtt");
@@ -160,15 +170,18 @@ client.on("message", (topic, message) => {
     console.log(`Start_ms: ${start_ms}`);
     switch(state_obj.state) {
     case "Scheduled":
-      timer = "Scheduled";
+      timer = match_name;
+      match_name_show = "Next Match";
       break;
     case "Timeout":
       timer = "Timeout";
+      match_name_show = match_name;
       break;
     case "Driver":
       timer_end = new Date(start_ms + 105000);
       tick_timer();
       timer_next_tick = setInterval(tick_timer, 50);
+      match_name_show = match_name;
       break;
     case "DriverDone":
       timer = "0:00";
@@ -177,18 +190,23 @@ client.on("message", (topic, message) => {
       timer_end = new Date(start_ms + 15000);
       tick_timer();
       timer_next_tick = setInterval(tick_timer, 50);
+      match_name_show = match_name;
       break;
     case "AutonomousDone":
       timer = "0:00";
+      match_name_show = match_name;
       break;
     case "Abandoned":
       timer = "Abandoned";
+      match_name_show = match_name;
       break;
     case "Stopped":
       timer = "Stopped";
+      match_name_show = match_name;
       break;
     case "Scored":
       timer = "Scoring";
+      match_name_show = match_name;
       break;
     }
     break;
@@ -240,8 +258,10 @@ onMount(() => {
   {:else if (display_state == "timer")}
     <div class="score-grid">
       <p id="event-name">{event_name}</p>
+      <p id="red-name">Red Alliance</p>
+      <p id="blue-name">Blue Alliance</p>
       <p id="timer">{timer}</p>
-      <p id="match">{match_name}</p>
+      <p id="match">{match_name_show}</p>
 
       <p id="score-red">{score_red}</p>
       <p id="score-blue">{score_blue}</p>
@@ -257,10 +277,16 @@ onMount(() => {
         {/each}
       </div>
     </div>
+    <div id="score-midground">
+    </div>
     <div id="score-background">
-      <div id="score-background-red" style={`width: ${score_midpoint_current}%`}>
+      <div id="score-background-red-1" style={`width: ${red_anim_x}%`}>
       </div>
-      <div id="score-background-blue" style={`width: ${100 - score_midpoint_current}%`}>
+      <div id="score-background-red-2" style={`width: ${score_midpoint_current - red_anim_x}%`}>
+      </div>
+      <div id="score-background-blue-1" style={`width: ${100 - score_midpoint_current - blue_anim_x}%`}>
+      </div>
+      <div id="score-background-blue-2" style={`width: ${blue_anim_x}%`}>
       </div>
     </div>
   {:else if (display_state == "pre-game")}
@@ -273,6 +299,24 @@ onMount(() => {
     <div class="banner"><p>Practice @ 12:45</p></div>
   {:else if (display_state == "red-wins")}
     <img alt="red-wins" src="/gifs/red_win.gif" width="100%" height="100%">
+  {:else if (display_state == "blue-wins")}
+    <img alt="blue-wins" src="/gifs/blue_win.gif" width="100%" height="100%">
+  {:else if (display_state == "rockies")}
+    <img alt="rockies" src="/gifs/rockies.gif" width="100%" height="100%">
+  {:else if (display_state == "prairies")}
+    <img alt="prairies" src="/gifs/prairies.gif" width="100%" height="100%">
+  {:else if (display_state == "ab-education")}
+    <img alt="ab-education" src="/gifs/ab_education.gif" width="100%" height="100%">
+  {:else if (display_state == "ab-innovate")}
+    <img alt="ab-innovate" src="/gifs/ab_innovate.gif" width="100%" height="100%">
+  {:else if (display_state == "tcenergy")}
+    <img alt="tcenergy" src="/gifs/tcenergy.gif" width="100%" height="100%">
+  {:else if (display_state == "tourismcalgary")}
+    <img alt="tourismcalgary" src="/gifs/tourismcalgary.gif" width="100%" height="100%">
+  {:else if (display_state == "encore")}
+    <img alt="encore" src="/gifs/encore.gif" width="100%" height="100%">
+  {:else if (display_state == "westmech")}
+    <img alt="westmech" src="/gifs/westmech.gif" width="100%" height="100%">
   {:else}
     <div class="banner"><p>Invalid State {display_state}</p></div>
   {/if}
@@ -297,26 +341,46 @@ p {
   font-family: "apple2";
   margin: 0px;
   color: white;
-  -webkit-text-stroke: 1px black;
+}
+
+#score-midground {
+  z-index: 1;
+  position: relative;
+  top: -94%;
+  left: 1%;
+  height: 88%;
+  width: 98%;
+  background-color: black;
+  background-image: url("/gifs/wavy_background.gif");
 }
 
 #score-background {
   z-index: 0;
   position: relative;
-  top: -100%;
+  top: -188%;
   display: flex;
   flex-direction: row;
   height: 100%;
 }
 
-#score-background-blue {
+#score-background-blue-1 {
+  height: 100%;
+  background-color: #0000ee;
+}
+
+#score-background-blue-2 {
   height: 100%;
   background-color: blue;
 }
 
-#score-background-red {
+#score-background-red-1 {
   height: 100%;
   background-color: red;
+}
+
+#score-background-red-2 {
+  height: 100%;
+  background-color: #ee0000;
 }
 
 .banner {
@@ -332,7 +396,7 @@ p {
 .teams {
   width: 100%;
   height: 100%;
-  font-size: 1.5cqw;
+  font-size: 2cqw;
   display: flex;
   justify-content: space-around;
   align-items: center;
@@ -374,6 +438,16 @@ p {
   font-size: 2cqw;
 }
 
+#blue-name {
+  grid-area: blue-top;
+  font-size: 1.5cqw;
+}
+
+#red-name {
+  grid-area: red-top;
+  font-size: 1.5cqw;
+}
+
 #timer {
   grid-area: mid;
   font-size: 5cqw;
@@ -382,7 +456,7 @@ p {
 div.score-grid {
   position: relative;
   background-color: transparent;
-  z-index: 1;
+  z-index: 2;
   width: 100%;
   height: 100%;
   display: grid;
