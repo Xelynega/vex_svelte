@@ -304,11 +304,9 @@ onMount(() => {
     <img class="gif-background" alt="wavy" src="/gifs/wavy_background.gif">
     <img class="gif-foreground" alt="blue-wins" src="/gifs/blue_win.gif">
   {:else if (display_state == "rockies")}
-    <img class="gif-background" alt="wavy" src="/gifs/wavy_background.gif">
-    <img class="gif-foreground" alt="rockies" src="/gifs/rockies.gif">
+    <img class="gif" alt="rockies" src="/gifs/rockies.gif">
   {:else if (display_state == "prairies")}
-    <img class="gif-background" alt="wavy" src="/gifs/wavy_background.gif">
-    <img class="gif-foreground" alt="prairies" src="/gifs/prairies.gif">
+    <img class="gif" alt="prairies" src="/gifs/prairies.gif">
   {:else if (display_state == "ab-education")}
     <img class="gif-background" alt="wavy" src="/gifs/wavy_background.gif">
     <img class="gif-foreground" alt="ab-education" src="/gifs/ab_education.gif">
@@ -369,6 +367,11 @@ p {
   position: relative;
   top: -103.3%;
   width: 100%;
+}
+
+.gif {
+  width: 100%;
+  height: 100%;
 }
 
 .gif-background {
