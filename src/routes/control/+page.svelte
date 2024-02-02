@@ -1,7 +1,7 @@
 <script>
 import mqtt from "mqtt";
 
-const client = mqtt.connect("ws://metznet.ca:8883");
+const client = mqtt.connect("ws://127.0.0.1:8883");
 
 /**
 * @type any

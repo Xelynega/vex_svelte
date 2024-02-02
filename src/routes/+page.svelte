@@ -59,7 +59,7 @@ let display_state = "init";
 /** @type {string} */
 let display_class = "side-display";
 
-const client = mqtt.connect("ws://metznet.ca:8883");
+const client = mqtt.connect("ws://127.0.0.1:8883");
 
 
 client.on("connect", () => {
@@ -364,8 +364,9 @@ p {
 
 .gif-foreground {
   z-index: 1;
-  position: relative;
-  top: -103.3%;
+  position: absolute;
+  top: 0;
+  height: 100%;
   width: 100%;
 }
 
@@ -376,6 +377,8 @@ p {
 
 .gif-background {
   z-index: 0;
+  position: absolute;
+  top: 0;
   height: 100%;
   width: 100%;
 }

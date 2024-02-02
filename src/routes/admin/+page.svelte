@@ -9,7 +9,7 @@ let led_sizes = {
   "side": { width: 896, height: 128 }
 }
 
-const client = mqtt.connect("ws://metznet.ca:8883");
+const client = mqtt.connect("ws://127.0.0.1:8883");
 let displays = {};
 let division_names = {};
 let divisions = {};
