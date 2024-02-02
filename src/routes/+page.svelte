@@ -59,7 +59,7 @@ let display_state = "init";
 /** @type {string} */
 let display_class = "side-display";
 
-const client = mqtt.connect("ws://127.0.0.1:8883");
+const client = mqtt.connect("ws://10.42.0.36:8883");
 
 
 client.on("connect", () => {
@@ -290,9 +290,37 @@ onMount(() => {
       </div>
     </div>
   {:else if (display_state == "pre-game")}
-    <div id="pre-game"></div>
+    <img class="gif-background" alt="wavy" src="/gifs/wavy_background.gif">
+    <div class="pre-game">
+      <div class="pre-bot" id="pre-r1">
+        <p>{teams_red[0]}</p>
+	<object type="image/png" data="/robots/{teams_red[0]}.gif">
+          <img src="/robots/fallback.png">
+	</object>
+      </div>
+      <div class="pre-bot" id="pre-r2">
+        <p>{teams_red[1]}</p>
+	<object type="image/png" data="/robots/{teams_red[1]}.gif">
+          <img src="/robots/fallback.png">
+	</object>
+      </div>
+      <div id="pre-mid"><p>VS</p></div>
+      <div class="pre-bot" id="pre-b1">
+        <p>{teams_blue[0]}</p>
+	<object type="image/png" data="/robots/{teams_blue[0]}.gif">
+          <img src="/robots/fallback.png">
+	</object>
+      </div>
+      <div class="pre-bot" id="pre-b2">
+        <p>{teams_blue[1]}</p>
+        <object type="image/png" data="/robots/{teams_blue[1]}.gif">
+          <img src="/robots/fallback.png">
+	</object>
+      </div>
+    </div>
   {:else if (display_state == "event-name")}
-    <div class="banner"><p>{event_name}</p></div>
+    <img class="gif-background" alt="wavy" src="/gifs/wavy_background.gif">
+    <img class="gif-foreground" alt="Mecha Mayhem 2024" src="/gifs/mm2024.gif">
   {:else if (display_state == "alliance-selection")}
     <div class="banner"><p>210Y Selecting</p></div>
   {:else if (display_state == "break")}
@@ -375,6 +403,67 @@ p {
   height: 100%;
 }
 
+#pre-mid {
+  font-size: 7cqw;
+  grid-area: mid;
+}
+
+.pre-bot object {
+  height: 80cqh;
+  width: 80cqh;
+}
+
+.pre-bot object img {
+  height: 100%;
+  width: 100%;
+}
+
+.pre-bot {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  flex-grow: 0;
+  flex-basis: min-content;
+  height: 100%;
+  width: 100%;
+}
+
+#pre-b1 {
+  font-size: 2cqw;
+  grid-area: b1;
+}
+
+#pre-b2 {
+  font-size: 2cqw;
+  grid-area: b2;
+}
+
+#pre-r1 {
+  font-size: 2cqw;
+  grid-area: r1;
+}
+
+#pre-r2 {
+  font-size: 2cqw;
+  grid-area: r2;
+}
+
+.pre-game {
+  z-index: 1;
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: 100%;
+
+  display: grid;
+  justify-items: center;
+  align-items: center;
+  grid-template-columns: 22.5% 22.5% 10% 22.5% 22.5%;
+  grid-template-rows: 100%;
+  grid-template-areas: "r1 r2 mid b1 b2";
+}
+
 .gif-background {
   z-index: 0;
   position: absolute;
@@ -412,7 +501,18 @@ p {
   background-color: #ee0000;
 }
 
+.banner-gif {
+  z-index: 0;
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: 100%;
+}
+
 .banner {
+  z-index: 1;
+  position: absolute;
+  top: 0;
   display: flex;
   font-size: 5cqw;
   align-items: center;

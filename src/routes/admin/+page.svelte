@@ -9,7 +9,7 @@ let led_sizes = {
   "side": { width: 896, height: 128 }
 }
 
-const client = mqtt.connect("ws://127.0.0.1:8883");
+const client = mqtt.connect("ws://10.42.0.36:8883");
 let displays = {};
 let division_names = {};
 let divisions = {};
@@ -82,7 +82,7 @@ client.on("message", (topic, message) => {
       <h2>{`${division_names[active_division]} Division`}</h2>
       {#each Object.entries(displays[active_division]) as [field, field_data] }
         <div class="field">
-          <h3>Field {field}</h3>
+          <h3>{field} - {field_data.name}</h3>
           <iframe src="/?field={active_division}/{field}" width={led_sizes[field_data.class].width} height={led_sizes[field_data.class].height} title="Field {active_division}/{field}"></iframe>
           <br />
           <select bind:value={field_data.class} on:change={() => client.publish(`display/${active_division}/${field}/class`, field_data.class, { retain: true })}>

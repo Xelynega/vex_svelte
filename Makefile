@@ -1,4 +1,4 @@
-build/index.html: src/routes/+page.svelte src/routes/control/+page.svelte
+build/index.html: src/routes/+page.svelte src/routes/control/+page.svelte src/routes/admin/+page.svelte static/gifs/* static/robots/*
 	npm run build
 
 .PHONY: run dev iframe
