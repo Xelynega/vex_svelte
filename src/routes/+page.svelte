@@ -12,6 +12,8 @@ let field_score_topic;
 let display_state_topic;
 /** @type {string} */
 let display_class_topic;
+/** @type {string} */
+let display_name_topic;
 
 /** @type {number} */
 let score_midpoint_current = 50;
@@ -57,6 +59,9 @@ let timer = "Next Match";
 let display_state = "init";
 
 /** @type {string} */
+let display_name = "default";
+
+/** @type {string} */
 let display_class = "side-display";
 
 const client = mqtt.connect("ws://10.42.0.36:8883");
@@ -85,6 +90,14 @@ client.on("connect", () => {
       console.log(err);
     } else {
       console.log(`subscribed to ${display_class_topic}`);
+    }
+  });
+
+  client.subscribe(display_name_topic, (err) => {
+    if (err) {
+      console.log(err);
+    } else {
+      console.log(`subscribed to ${display_name_topic}`);
     }
   });
 
@@ -219,6 +232,9 @@ client.on("message", (topic, message) => {
   case display_state_topic:
     display_state = message_str;
     break;
+  case display_name_topic:
+    display_name = message_str;
+    break;
   case display_class_topic:
     switch(message_str){
     case "side":
@@ -248,6 +264,7 @@ onMount(() => {
   field_score_topic    = `field/${field_id}/score`;
   display_state_topic  = `display/${field_id}/state`;
   display_class_topic  = `display/${field_id}/class`;
+  display_name_topic   = `display/${field_id}/name`;
 });
 
 </script>
@@ -257,9 +274,9 @@ onMount(() => {
     <div class="banner"></div>
   {:else if (display_state == "timer")}
     <div class="score-grid">
-      <p id="event-name">{event_name}</p>
-      <p id="red-name">Red Alliance</p>
-      <p id="blue-name">Blue Alliance</p>
+      <!-- <p id="event-name">{event_name}</p> -->
+      <p id="red-name">{event_name}</p>
+      <p id="blue-name">{display_name}</p>
       <p id="timer">{timer}</p>
       <p id="match">{match_name_show}</p>
 
