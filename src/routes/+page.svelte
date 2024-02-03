@@ -378,7 +378,7 @@ onMount(() => {
 <style>
 @font-face {
   font-family: "apple2";
-  src: url('/static/fonts/apple2.woff2') format('woff2');
+  src: url('/fonts/apple2.woff2') format('woff2');
 }
 
 :global(html){
@@ -540,7 +540,7 @@ p {
 }
 
 .teams {
-  width: 100%;
+  width: 125%;
   height: 100%;
   font-size: 2cqw;
   display: flex;
@@ -551,11 +551,13 @@ p {
 #teams-red {
   flex-direction: row;
   grid-area: red-bot;
+  margin-left: 50px;
 }
 
 #teams-blue {
   flex-direction: row-reverse;
   grid-area: blue-bot;
+  margin-right: 50px;
 }
 
 #score-red {
@@ -587,11 +589,16 @@ p {
 #blue-name {
   grid-area: blue-top;
   font-size: 1.5cqw;
+  margin-right: 15px;
+  margin-top: 10px;
+  text-align: right;
 }
 
 #red-name {
   grid-area: red-top;
   font-size: 1.5cqw;
+  margin-left: 15px;
+  margin-top: 10px;
 }
 
 #timer {
