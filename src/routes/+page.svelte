@@ -371,13 +371,13 @@ onMount(() => {
       <div class="pre-bot" id="pre-r1">
         <p>{teams_red[0]}</p>
 	<object type="image/png" data="/robots/{teams_red[0]}.gif">
-          <img src="/robots/fallback.jpg">
+          <img class="rotating" src="/robots/fallback.jpg">
 	</object>
       </div>
       <div class="pre-bot" id="pre-r2">
         <p>{teams_red[1]}</p>
 	<object type="image/png" data="/robots/{teams_red[1]}.gif">
-          <img src="/robots/fallback.jpg">
+          <img class="rotating" src="/robots/fallback.jpg">
 	</object>
       </div>
       <div id="pre-mid">
@@ -388,13 +388,13 @@ onMount(() => {
       <div class="pre-bot" id="pre-b1">
         <p>{teams_blue[0]}</p>
 	<object type="image/png" data="/robots/{teams_blue[0]}.gif">
-          <img src="/robots/fallback.jpg">
+          <img class="rotating" src="/robots/fallback.jpg">
 	</object>
       </div>
       <div class="pre-bot" id="pre-b2">
         <p>{teams_blue[1]}</p>
         <object type="image/png" data="/robots/{teams_blue[1]}.gif">
-          <img src="/robots/fallback.jgp">
+          <img class="rotating" src="/robots/fallback.jgp">
 	</object>
       </div>
     </div>
@@ -729,5 +729,18 @@ div.score-grid {
   background-color: white;
   width: 1176px;
   height: 168px;
+}
+
+@-webkit-keyframes rotating {
+    from{
+        -webkit-transform: rotate(0deg);
+    }
+    to{
+        -webkit-transform: rotate(360deg);
+    }
+}
+
+.rotating {
+    -webkit-animation: rotating 2s linear infinite;
 }
 </style>
