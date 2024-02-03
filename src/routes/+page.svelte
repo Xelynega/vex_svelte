@@ -15,10 +15,16 @@ let display_class_topic;
 /** @type {string} */
 let display_name_topic;
 
+/** @type {string} */
+let display_sponsor_topic;
+
 /** @type {number} */
 let score_midpoint_current = 50;
 /** @type {number} */
 let score_midpoint_setpoint = 50;
+
+/** @type {string} */
+let sponsor_state = "westmech";
 
 let coeff_p = 0.1;
 
@@ -43,7 +49,9 @@ let event_name = "Mecha Mayhem 2024";
 let match_name = "No Match";
 let match_name_show = "No Match";
 let score_red = 0;
+let score_red_str = "";
 let score_blue = 0;
+let score_blue_str = "";
 /** @type {string[]} */
 let teams_red = [];
 /** @type {string[]} */
@@ -98,6 +106,14 @@ client.on("connect", () => {
       console.log(err);
     } else {
       console.log(`subscribed to ${display_name_topic}`);
+    }
+  });
+
+  client.subscribe(display_sponsor_topic, (err) => {
+    if (err) {
+      console.log(err);
+    } else {
+      console.log(`subscribed to ${display_sponsor_topic}`);
     }
   });
 
@@ -158,14 +174,11 @@ client.on("message", (topic, message) => {
   let topic_str = topic.toString();
   let message_str = message.toString();
 
-  console.log(`${topic_str} - ${message_str}`);
-
   switch(topic_str){
   case "time":
     let local = Date.now();
     let server = JSON.parse(message_str) * 1000;
     offset = local - server;
-    console.log(`NEW offset: ${local} - ${server} = ${offset}`);
     break;
   case field_metadata_topic:
     const field_obj = JSON.parse(message_str);
@@ -173,6 +186,9 @@ client.on("message", (topic, message) => {
     teams_blue = [field_obj.blue_teams[0], field_obj.blue_teams[1]];
     let num = field_obj.tuple.match_num;
     let round = field_obj.tuple.round;
+    if (round == "Qualification") {
+      round = "Qual";
+    }
     match_name = `${round} ${num}`;
     break;
   case field_state_topic:
@@ -184,6 +200,10 @@ client.on("message", (topic, message) => {
     switch(state_obj.state) {
     case "Scheduled":
       timer = match_name;
+      score_red_str = "";
+      score_blue_str = "";
+      score_blue = 0;
+      score_red = 0;
       match_name_show = "Next Match";
       break;
     case "Timeout":
@@ -197,7 +217,11 @@ client.on("message", (topic, message) => {
       match_name_show = match_name;
       break;
     case "DriverDone":
-      timer = "0:00";
+      timer = "Scoring";
+      display_state = sponsor_state;
+      setTimeout(() => {
+        display_state = "timer";
+      }, 6000);
       break;
     case "Autonomous":
       timer_end = new Date(start_ms + 15000);
@@ -218,7 +242,8 @@ client.on("message", (topic, message) => {
       match_name_show = match_name;
       break;
     case "Scored":
-      timer = "Scoring";
+      timer = "Scored";
+      display_state = "timer";
       match_name_show = match_name;
       break;
     }
@@ -227,10 +252,17 @@ client.on("message", (topic, message) => {
     const score_obj = JSON.parse(message_str);
     score_red = score_obj.red_total;
     score_blue = score_obj.blue_total;
+    if (timer != "Scoring") {
+      score_red_str = `${score_red}`;
+      score_blue_str = `${score_blue}`;
+    }
     score_midpoint_setpoint = ((score_red + 1) / (score_red + score_blue + 2)) * 100;
     break;
   case display_state_topic:
     display_state = message_str;
+    break;
+  case display_sponsor_topic:
+    sponsor_state = message_str;
     break;
   case display_name_topic:
     display_name = message_str;
@@ -265,6 +297,7 @@ onMount(() => {
   display_state_topic  = `display/${field_id}/state`;
   display_class_topic  = `display/${field_id}/class`;
   display_name_topic   = `display/${field_id}/name`;
+  display_sponsor_topic   = `display/${field_id}/sponsor`;
 });
 
 </script>
