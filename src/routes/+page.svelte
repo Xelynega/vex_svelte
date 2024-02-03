@@ -48,6 +48,8 @@ let animation_timer_interval = setInterval(animation_timer, 10);
 let event_name = "Mecha Mayhem 2024";
 let match_name = "No Match";
 let match_name_show = "No Match";
+let round = "";
+let number = "";
 let score_red = 0;
 let score_red_str = "";
 let score_blue = 0;
@@ -57,7 +59,7 @@ let teams_red = [];
 /** @type {string[]} */
 let teams_blue = [];
 
-/** @type {undefined | Date} */
+/** @type {undefined | Number} */
 let timer_end = undefined;
 /** @type {undefined | ReturnType<typeof setInterval>} */
 let timer_next_tick = undefined;
@@ -158,7 +160,8 @@ function tick_timer() {
   }
 
   const now = new Date()
-  const time_diff = timer_end.getTime() - now.getTime() + offset;
+  const time_diff = (timer_end*1000) - now.getTime() - offset;
+  console.log(`TIME_DIFF: ${time_diff} = ${timer_end} - ${now.getTime()} - ${offset}`);
   if (time_diff <= 0) {
     timer = "0:00";
     stop_timer();
@@ -178,25 +181,33 @@ client.on("message", (topic, message) => {
   case "time":
     let local = Date.now();
     let server = JSON.parse(message_str) * 1000;
-    offset = local - server;
+    offset = server - local;
+
+    if (timer != "Scoring" && timer != "Scored" && match_name_show != "Next Match") {
+      stop_timer();
+      tick_timer();
+      timer_next_tick = setInterval(tick_timer, 50);
+    }
+
+    console.log(`NEW_OFFSET: ${server} - ${local} = ${offset}`);
     break;
   case field_metadata_topic:
     const field_obj = JSON.parse(message_str);
     teams_red = [field_obj.red_teams[0], field_obj.red_teams[1]];
     teams_blue = [field_obj.blue_teams[0], field_obj.blue_teams[1]];
     let num = field_obj.tuple.match_num;
-    let round = field_obj.tuple.round;
+    round = field_obj.tuple.round;
     if (round == "Qualification") {
       round = "Qual";
     }
     match_name = `${round} ${num}`;
+    number = `${num}`;
     break;
   case field_state_topic:
     stop_timer();
 
     const state_obj = JSON.parse(message_str);
-    const start_ms = state_obj.start * 1000;
-    console.log(`Start_ms: ${start_ms}`);
+    const start_ms = state_obj.start;
     switch(state_obj.state) {
     case "Scheduled":
       timer = match_name;
@@ -205,33 +216,46 @@ client.on("message", (topic, message) => {
       score_blue = 0;
       score_red = 0;
       match_name_show = "Next Match";
+      display_state = "pre-game";
       break;
     case "Timeout":
       timer = "Timeout";
       match_name_show = match_name;
       break;
     case "Driver":
-      timer_end = new Date(start_ms + 105000);
+      timer_end = start_ms + 105;
       tick_timer();
       timer_next_tick = setInterval(tick_timer, 50);
       match_name_show = match_name;
       break;
     case "DriverDone":
       timer = "Scoring";
+      score_red_str = "";
+      score_blue_str = "";
       display_state = sponsor_state;
       setTimeout(() => {
         display_state = "timer";
       }, 6000);
       break;
     case "Autonomous":
-      timer_end = new Date(start_ms + 15000);
+      if(display_state == "pre-game") {
+        display_state = "timer";
+      }
+      score_red = 0;
+      score_blue = 0;
+      score_red_str = "0";
+      score_blue_str = "0";
+
+      timer_end = start_ms + 15;
       tick_timer();
       timer_next_tick = setInterval(tick_timer, 50);
       match_name_show = match_name;
       break;
     case "AutonomousDone":
-      timer = "0:00";
       match_name_show = match_name;
+      timer = "Scoring";
+      score_red_str = "";
+      score_blue_str = "";
       break;
     case "Abandoned":
       timer = "Abandoned";
@@ -243,6 +267,8 @@ client.on("message", (topic, message) => {
       break;
     case "Scored":
       timer = "Scored";
+      score_red_str = `${score_red}`;
+      score_blue_str = `${score_blue}`;
       display_state = "timer";
       match_name_show = match_name;
       break;
@@ -313,8 +339,8 @@ onMount(() => {
       <p id="timer">{timer}</p>
       <p id="match">{match_name_show}</p>
 
-      <p id="score-red">{score_red}</p>
-      <p id="score-blue">{score_blue}</p>
+      <p id="score-red">{score_red_str}</p>
+      <p id="score-blue">{score_blue_str}</p>
 
       <div class="teams" id="teams-red">
         {#each teams_red as team}
@@ -345,26 +371,30 @@ onMount(() => {
       <div class="pre-bot" id="pre-r1">
         <p>{teams_red[0]}</p>
 	<object type="image/png" data="/robots/{teams_red[0]}.gif">
-          <img src="/robots/fallback.png">
+          <img src="/robots/fallback.jpg">
 	</object>
       </div>
       <div class="pre-bot" id="pre-r2">
         <p>{teams_red[1]}</p>
 	<object type="image/png" data="/robots/{teams_red[1]}.gif">
-          <img src="/robots/fallback.png">
+          <img src="/robots/fallback.jpg">
 	</object>
       </div>
-      <div id="pre-mid"><p>VS</p></div>
+      <div id="pre-mid">
+        <p id="pre-mid-top">{round}</p>
+        <div id="pre-mid-vs"><p>VS</p></div>
+        <p id="pre-mid-bot">{number}</p>
+      </div>
       <div class="pre-bot" id="pre-b1">
         <p>{teams_blue[0]}</p>
 	<object type="image/png" data="/robots/{teams_blue[0]}.gif">
-          <img src="/robots/fallback.png">
+          <img src="/robots/fallback.jpg">
 	</object>
       </div>
       <div class="pre-bot" id="pre-b2">
         <p>{teams_blue[1]}</p>
         <object type="image/png" data="/robots/{teams_blue[1]}.gif">
-          <img src="/robots/fallback.png">
+          <img src="/robots/fallback.jgp">
 	</object>
       </div>
     </div>
@@ -453,9 +483,38 @@ p {
   height: 100%;
 }
 
+#pre-mid-vs {
+  height: 60%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  font-size: 3cqw;
+}
+
+#pre-mid-top {
+  height: 20%;
+  font-size: 2cqw;
+}
+
+#pre-mid-bot {
+  height: 20%;
+  font-size: 2cqw;
+}
+
 #pre-mid {
+  text-wrap: nowrap;
   font-size: 7cqw;
   grid-area: mid;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  flex-grow: 0;
+  flex-basis: min-content;
+  height: 100%;
+  width: 100%;
 }
 
 .pre-bot object {
