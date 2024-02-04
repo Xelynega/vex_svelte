@@ -359,7 +359,7 @@ onMount(() => {
   display_name_topic   = `display/${field_id}/name`;
   display_sponsor_topic   = `display/${field_id}/sponsor`;
   // Hack for grand finals to show information on multiple fields
-  if (final_hack) {
+  if (final_hack && (field_id == "1/2" || field_id == "2/4")) {
     field_metadata_topic = `field/+/+`;
     field_state_topic    = `field/+/+/state`;
     field_score_topic    = `field/+/+/score`;
