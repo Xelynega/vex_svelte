@@ -33,6 +33,7 @@ let score_midpoint_setpoint = 50;
 let sponsor_state = "westmech";
 
 let coeff_p = 0.1;
+let final_hack = true;
 
 let red_anim_x = 0;
 let blue_anim_x = 0;
@@ -208,14 +209,11 @@ client.on("message", (topic, message) => {
   let topic_str = topic.toString();
   let message_str = message.toString();
 
-  switch(topic_str){
-  case "alliance/selecting":
+  if (topic_str == "alliance/selecting") {
     alliance_selecting = message_str;
-  break;
-  case "alliance/selected":
+  } else if (topic_str == "alliance/selected") {
     alliance_selected = message_str;
-  break;
-  case "alliance/status":
+  } else if (topic_str == "alliance/status") {
     selection_state = message_str;
     if(selection_state == "accepted") {
       display_state = "accepted";
@@ -228,8 +226,7 @@ client.on("message", (topic, message) => {
         display_state = "alliance-selection";
       }, 4000);
     }
-  break;
-  case "time":
+  } else if (topic_str == "time") {
     let local = Date.now();
     let server = JSON.parse(message_str) * 1000;
     offset = server - local;
@@ -241,8 +238,7 @@ client.on("message", (topic, message) => {
     }
 
     console.log(`NEW_OFFSET: ${server} - ${local} = ${offset}`);
-    break;
-  case field_metadata_topic:
+  } else if (topic_str.match(/^field\/[^\/]+\/[^\/]+$/)) {
     const field_obj = JSON.parse(message_str);
     teams_red = [field_obj.red_teams[0], field_obj.red_teams[1]];
     teams_blue = [field_obj.blue_teams[0], field_obj.blue_teams[1]];
@@ -258,8 +254,7 @@ client.on("message", (topic, message) => {
     instance = `${field_obj.tuple.instance}`;
     match_name = `${round} ${instance}-${num}`;
     number = `${num}`;
-    break;
-  case field_state_topic:
+  } else if (topic_str.match(/^field\/[^\/]+\/[^\/]+\/state$/)) {
     stop_timer();
 
     const state_obj = JSON.parse(message_str);
@@ -321,8 +316,7 @@ client.on("message", (topic, message) => {
       display_state = "timer";
       break;
     }
-    break;
-  case field_score_topic:
+  } else if (topic_str.match(/^field\/[^\/]+\/[^\/]+\/score$/)) {
     const score_obj = JSON.parse(message_str);
     score_red = score_obj.red_total;
     score_blue = score_obj.blue_total;
@@ -331,17 +325,13 @@ client.on("message", (topic, message) => {
       score_blue_str = `${score_blue}`;
     }
     score_midpoint_setpoint = ((score_red + 1) / (score_red + score_blue + 2)) * 100;
-    break;
-  case display_state_topic:
+  } else if (topic_str == display_state_topic) {
     display_state = message_str;
-    break;
-  case display_sponsor_topic:
+  } else if (topic_str == display_sponsor_topic) {
     sponsor_state = message_str;
-    break;
-  case display_name_topic:
+  } else if (topic_str == display_name_topic) {
     display_name = message_str;
-    break;
-  case display_class_topic:
+  } else if (topic_str == display_class_topic) {
     switch(message_str){
     case "side":
       display_class = "side-display";
@@ -352,8 +342,7 @@ client.on("message", (topic, message) => {
     default:
       console.log(`invalid display class ${message_str}`)
     }
-    break;
-  default:
+  } else {
     console.log(`Unhandled topic ${topic_str}`)
   }
 });
@@ -365,13 +354,20 @@ onMount(() => {
   if (field_id === null) {
     field_id = "default";
   }
-  field_metadata_topic = `field/${field_id}`;
-  field_state_topic    = `field/${field_id}/state`;
-  field_score_topic    = `field/${field_id}/score`;
   display_state_topic  = `display/${field_id}/state`;
   display_class_topic  = `display/${field_id}/class`;
   display_name_topic   = `display/${field_id}/name`;
   display_sponsor_topic   = `display/${field_id}/sponsor`;
+  // Hack for grand finals to show information on multiple fields
+  if (final_hack) {
+    field_metadata_topic = `field/+/+`;
+    field_state_topic    = `field/+/+/state`;
+    field_score_topic    = `field/+/+/score`;
+  } else {
+    field_metadata_topic = `field/${field_id}`;
+    field_state_topic    = `field/${field_id}/state`;
+    field_score_topic    = `field/${field_id}/score`;
+  }
 });
 
 </script>
