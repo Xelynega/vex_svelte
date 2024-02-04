@@ -16,6 +16,12 @@ let display_class_topic;
 let display_name_topic;
 
 /** @type {string} */
+let alliance_selecting = "";
+/** @type {string} */
+let alliance_selected = "";
+let selection_state = "";
+
+/** @type {string} */
 let display_sponsor_topic;
 
 /** @type {number} */
@@ -47,9 +53,9 @@ let animation_timer_interval = setInterval(animation_timer, 10);
 
 let event_name = "Mecha Mayhem 2024";
 let match_name = "No Match";
-let match_name_show = "No Match";
 let round = "";
 let number = "";
+let instance = "";
 let score_red = 0;
 let score_red_str = "";
 let score_blue = 0;
@@ -79,6 +85,31 @@ const client = mqtt.connect("ws://10.42.0.36:8883");
 
 client.on("connect", () => {
   console.log("connected to mqtt");
+
+  client.subscribe("alliance/selecting", (err) => {
+    if (err) {
+      console.log(err);
+    } else {
+      console.log(`subscribed to alliance/selecting`);
+    }
+  });
+
+  client.subscribe("alliance/selected", (err) => {
+    if (err) {
+      console.log(err);
+    } else {
+      console.log(`subscribed to alliance/selected`);
+    }
+  });
+
+  client.subscribe("alliance/status", (err) => {
+    if (err) {
+      console.log(err);
+    } else {
+      console.log(`subscribed to alliance/status`);
+    }
+  });
+
   client.subscribe("time", (err) => {
     if (err) {
       console.log(err);
@@ -178,12 +209,32 @@ client.on("message", (topic, message) => {
   let message_str = message.toString();
 
   switch(topic_str){
+  case "alliance/selecting":
+    alliance_selecting = message_str;
+  break;
+  case "alliance/selected":
+    alliance_selected = message_str;
+  break;
+  case "alliance/status":
+    selection_state = message_str;
+    if(selection_state == "accepted") {
+      display_state = "accepted";
+      setTimeout(() => {
+        display_state = "alliance-selection";
+      }, 4000);
+    } else if(selection_state == "declined") {
+      display_state = "denied";
+      setTimeout(() => {
+        display_state = "alliance-selection";
+      }, 4000);
+    }
+  break;
   case "time":
     let local = Date.now();
     let server = JSON.parse(message_str) * 1000;
     offset = server - local;
 
-    if (timer != "Scoring" && timer != "Scored" && match_name_show != "Next Match") {
+    if (timer != "Scoring" && timer != "Scored") {
       stop_timer();
       tick_timer();
       timer_next_tick = setInterval(tick_timer, 50);
@@ -199,8 +250,13 @@ client.on("message", (topic, message) => {
     round = field_obj.tuple.round;
     if (round == "Qualification") {
       round = "Qual";
+    } else if (round == "QuarterFinals") {
+      round = "QF"
+    } else if (round == "SemiFinals") {
+      round = "SF"
     }
-    match_name = `${round} ${num}`;
+    instance = `${field_obj.tuple.instance}`;
+    match_name = `${round} ${instance}-${num}`;
     number = `${num}`;
     break;
   case field_state_topic:
@@ -215,18 +271,15 @@ client.on("message", (topic, message) => {
       score_blue_str = "";
       score_blue = 0;
       score_red = 0;
-      match_name_show = "Next Match";
       display_state = "pre-game";
       break;
     case "Timeout":
       timer = "Timeout";
-      match_name_show = match_name;
       break;
     case "Driver":
       timer_end = start_ms + 105;
       tick_timer();
       timer_next_tick = setInterval(tick_timer, 50);
-      match_name_show = match_name;
       break;
     case "DriverDone":
       timer = "Scoring";
@@ -249,28 +302,23 @@ client.on("message", (topic, message) => {
       timer_end = start_ms + 15;
       tick_timer();
       timer_next_tick = setInterval(tick_timer, 50);
-      match_name_show = match_name;
       break;
     case "AutonomousDone":
-      match_name_show = match_name;
       timer = "Scoring";
       score_red_str = "";
       score_blue_str = "";
       break;
     case "Abandoned":
       timer = "Abandoned";
-      match_name_show = match_name;
       break;
     case "Stopped":
       timer = "Stopped";
-      match_name_show = match_name;
       break;
     case "Scored":
       timer = "Scored";
       score_red_str = `${score_red}`;
       score_blue_str = `${score_blue}`;
       display_state = "timer";
-      match_name_show = match_name;
       break;
     }
     break;
@@ -337,7 +385,7 @@ onMount(() => {
       <p id="red-name">{event_name}</p>
       <p id="blue-name">{display_name}</p>
       <p id="timer">{timer}</p>
-      <p id="match">{match_name_show}</p>
+      <p id="match">{match_name}</p>
 
       <p id="score-red">{score_red_str}</p>
       <p id="score-blue">{score_blue_str}</p>
@@ -383,7 +431,7 @@ onMount(() => {
       <div id="pre-mid">
         <p id="pre-mid-top">{round}</p>
         <div id="pre-mid-vs"><p>VS</p></div>
-        <p id="pre-mid-bot">{number}</p>
+        <p id="pre-mid-bot">{instance}-{number}</p>
       </div>
       <div class="pre-bot" id="pre-b1">
         <p>{teams_blue[0]}</p>
@@ -394,7 +442,7 @@ onMount(() => {
       <div class="pre-bot" id="pre-b2">
         <p>{teams_blue[1]}</p>
         <object type="image/png" data="/robots/{teams_blue[1]}.gif">
-          <img class="rotating" src="/robots/fallback.jgp">
+          <img class="rotating" src="/robots/fallback.jpg">
 	</object>
       </div>
     </div>
@@ -402,12 +450,38 @@ onMount(() => {
     <img class="gif-background" alt="wavy" src="/gifs/wavy_background.gif">
     <img class="gif-foreground" alt="Mecha Mayhem 2024" src="/gifs/mm2024.gif">
   {:else if (display_state == "alliance-selection")}
-    <div class="banner"><p>210Y Selecting</p></div>
+    <img class="gif-background" alt="wavy" src="/gifs/wavy_background.gif">
+    <div id="alliance-selection">
+      <div class="select-top" id="t1"><p>Captain</p></div>
+      <div class="select-top" id="t2"><p>Selected</p></div>
+      <div id="alliance-selecting">
+        {#if (alliance_selecting != "")}
+	<object type="image/png" data="/robots/{alliance_selecting}.gif">
+          <img class="rotating" src="/robots/fallback.jpg">
+	</object>
+        {/if}
+        <p>{alliance_selecting}</p>
+      </div>
+      <div id="alliance-selected">
+        {#if (alliance_selected != "")}
+	<object type="image/png" data="/robots/{alliance_selected}.gif">
+          <img class="rotating" src="/robots/fallback.jpg">
+	</object>
+        {/if}
+        <p>{alliance_selected}</p>
+      </div>
+    </div>
   {:else if (display_state == "break")}
     <div class="banner"><p>Practice @ 12:45</p></div>
   {:else if (display_state == "red-wins")}
     <img class="gif-background" alt="wavy" src="/gifs/wavy_background.gif">
     <img class="gif-foreground" alt="red-wins" src="/gifs/red_win.gif">
+  {:else if (display_state == "accepted")}
+    <img class="gif-background" alt="wavy" src="/gifs/wavy_background.gif">
+    <img class="gif-foreground" alt="accepted" src="/gifs/accepted.gif">
+  {:else if (display_state == "denied")}
+    <img class="gif-background" alt="wavy" src="/gifs/wavy_background.gif">
+    <img class="gif-foreground" alt="denied" src="/gifs/declined.gif">
   {:else if (display_state == "blue-wins")}
     <img class="gif-background" alt="wavy" src="/gifs/wavy_background.gif">
     <img class="gif-foreground" alt="blue-wins" src="/gifs/blue_win.gif">
@@ -457,6 +531,52 @@ p {
   font-family: "apple2";
   margin: 0px;
   color: white;
+}
+
+#alliance-selection {
+  position: absolute;
+  top: 0;
+  z-index: 1;
+
+  width: 100%;
+  height: 100%;
+
+  display: grid;
+
+  grid-template-columns: 50% 50%;
+  grid-template-rows: 10% 90%;
+  grid-template-areas: "t1 t2"
+                       "s1 s2";
+}
+
+#alliance-selecting {
+  grid-area: s1;
+  height: 100%;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: row-reverse;
+  flex-grow: 0;
+}
+
+#alliance-selecting p {
+  font-size: 3cqw;
+}
+
+#alliance-selected p {
+  font-size: 3cqw;
+}
+
+#alliance-selected {
+  grid-area: s2;
+  height: 100%;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: row;
+  flex-grow: 0;
 }
 
 #score-midground {
@@ -538,6 +658,24 @@ p {
   width: 100%;
 }
 
+.select-top p {
+  font-size: 1cqw;
+}
+
+.select-top {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#t1 {
+  grid-area: t1;
+}
+
+#t2 {
+  grid-area: t2;
+}
+
 #pre-b1 {
   font-size: 2cqw;
   grid-area: b1;
@@ -608,6 +746,19 @@ p {
 #score-background-red-2 {
   height: 100%;
   background-color: #ee0000;
+}
+
+#alliance-selection div object img {
+  height: 40cqh;
+  width: 40cqh;
+}
+
+#alliance-selection div object {
+  height: 180cqh;
+  width: 180cqh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .banner-gif {
